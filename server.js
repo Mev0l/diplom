@@ -51,7 +51,28 @@ app.get('/api/busy-slots', async (req, res) => {
     res.status(500).json({error: err.toString()});
   }
 });
-
+app.get('/qr/client', async (req, res) => {
+  try {
+    const target = `${PUBLIC_URL}/`;           // корень — клиентская часть
+    const svg = await QRCode.toString(target, { type: 'svg', margin: 1 });
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(svg);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Ошибка генерации QR-кода для клиента');
+  }
+});
+app.get('/qr/admin', async (req, res) => {
+  try {
+    const target = `${PUBLIC_URL}/admin.html`; // ваш админ-файл
+    const svg = await QRCode.toString(target, { type: 'svg', margin: 1 });
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(svg);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Ошибка генерации QR-кода для админа');
+  }
+});
 // Новая заявка (создать лид в Bitrix24)
 app.post('/api/book', async (req, res) => {
   const { name, phone, service, day, time, duration, price } = req.body;

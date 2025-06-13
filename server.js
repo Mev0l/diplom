@@ -63,8 +63,8 @@ app.get('/qr/client', async (req, res) => {
 app.get('/qr/admin', async (req, res) => {
   try {
     const publicURL = process.env.PUBLIC_URL
-      ? `${process.env.PUBLIC_URL}/admin`
-      : `https://diplom-production-78a7.up.railway.app/admin`;
+      ? `${process.env.PUBLIC_URL}`
+      : `https://diplom-production-78a7.up.railway.app`+ '/admin.html';
     const svg = await QRCode.toString(publicURL, { type: 'svg', margin: 1 });
     res.type('image/svg+xml').send(svg);
   } catch (e) {

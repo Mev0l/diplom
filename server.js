@@ -1,12 +1,10 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const path = require('path');
+const path = require('path`');
 const session = require('express-session');
-
 const app = express();
 const QRCode = require('qrcode');
-const PORT = process.env.PORT || 3001;
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 const B24_WEBHOOK = "https://b24-c15sq2.bitrix24.ru/rest/1/2xyexpag7xovn0gr/";
 
@@ -54,24 +52,25 @@ app.get('/api/busy-slots', async (req, res) => {
 });
 app.get('/qr/client', async (req, res) => {
   try {
-    const target = `${PUBLIC_URL}/`;           // корень — клиентская часть
+    const target = 'https://diplom-production-78a7.up.railway.app/';
     const svg = await QRCode.toString(target, { type: 'svg', margin: 1 });
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.send(svg);
+    res.type('image/svg+xml').send(svg);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Ошибка генерации QR-кода для клиента');
+    console.error('QR/client error:', err);
+    res.status(500).send('Ошибка генерации QR для клиентской части');
   }
 });
+
+// QR-код для админки
 app.get('/qr/admin', async (req, res) => {
   try {
-    const target = `${PUBLIC_URL}/admin.html`; // ваш админ-файл
+    // Если у вас админка открывается не с корня, а, например, с /admin.html — поправьте URL ниже
+    const target = 'https://diplom-production-78a7.up.railway.app/admin.html';
     const svg = await QRCode.toString(target, { type: 'svg', margin: 1 });
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.send(svg);
+    res.type('image/svg+xml').send(svg);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Ошибка генерации QR-кода для админа');
+    console.error('QR/admin error:', err);
+    res.status(500).send('Ошибка генерации QR для админки');
   }
 });
 // Новая заявка (создать лид в Bitrix24)
@@ -347,4 +346,5 @@ app.get('/qr', async (req, res) => {
     res.status(500).send('QR generation error');
   }
 });
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log("Server started on port", PORT));

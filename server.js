@@ -333,16 +333,5 @@ app.post('/admin/move-record', isAdmin, async (req, res) => {
     res.status(500).json({ error: e.toString() });
   }
 });
-app.get('/qr', async (req, res) => {
-  // Замените на свой реальный домен после деплоя!
-  const publicURL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
-  try {
-    const svg = await QRCode.toString(publicURL, { type: 'svg', margin: 1 });
-    res.setHeader('Content-Type', 'image/svg+xml');
-    res.send(svg);
-  } catch (err) {
-    res.status(500).send('QR generation error');
-  }
-});
 
 app.listen(PORT, () => console.log("Server started on port", PORT));

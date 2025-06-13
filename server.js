@@ -3,10 +3,11 @@ const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
 const session = require('express-session');
-const QRCode = require('qrcode');
-const app = express();
-const PORT = process.env.PORT || 3001;
 
+const app = express();
+const QRCode = require('qrcode');
+const PORT = process.env.PORT || 3001;
+const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 const B24_WEBHOOK = "https://b24-c15sq2.bitrix24.ru/rest/1/2xyexpag7xovn0gr/";
 
 // Middlewares

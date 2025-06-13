@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BarberShop CRM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: #161616;
+      color: #f2f2f2;
+    }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 24px 48px; background: #202020; position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 2em; font-weight: bold; letter-spacing: 2px; }
+    .logo span { color: #fbbd23; }
+    nav a { margin: 0 18px; color: #f2f2f2; text-decoration: none; font-weight: 600; transition: color 0.2s; }
+    nav a:hover { color: #fbbd23; }
+    .hero {
+      background: linear-gradient(135deg, #262626 60%, #fbbd23 120%);
+      padding: 80px 20px 60px 20px; text-align: center; animation: fadein 1.5s;
+    }
+    .hero h1 { font-size: 3em; margin-bottom: 12px; }
+    .hero p { font-size: 1.3em; color: #fbbd23; }
+    .btn {
+      display: inline-block; background: #fbbd23; color: #161616;
+      border-radius: 2em; padding: 15px 38px; font-weight: bold; font-size: 1.2em; text-decoration: none; margin-top: 24px;
+      transition: background 0.3s, box-shadow 0.3s; box-shadow: 0 4px 24px rgba(251,189,35,0.14); cursor: pointer; border: none;
+    }
+    .btn:hover { background: #ffcf53; box-shadow: 0 6px 30px rgba(251,189,35,0.25); }
+    .services { padding: 50px 0; text-align: center; }
+    .cards { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+    .card {
+      background: #232323; border-radius: 24px; box-shadow: 0 2px 14px #0008;
+      padding: 34px 28px; width: 280px; margin: 16px 0; transition: transform 0.25s;
+    }
+    .card:hover { transform: translateY(-10px) scale(1.03);}
+    .booking {
+      background: #191919; padding: 60px 16px; text-align: center; margin: 44px 0;
+      border-radius: 30px; box-shadow: 0 3px 30px #fbbd2330;
+    }
+    .booking h2 { color: #fbbd23; margin-bottom: 10px; }
+    .booking form {
+      display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 0 auto; max-width: 360px;
+    }
+    .booking input, .booking select {
+      padding: 13px 16px; border-radius: 1em; border: none; background: #232323; color: #f2f2f2;
+      font-size: 1.08em; width: 100%; box-sizing: border-box; transition: box-shadow 0.2s;
+    }
+    .booking input:focus, .booking select:focus { outline: none; box-shadow: 0 0 0 2px #fbbd23; }
+    .booking button.btn { margin-top: 10px; width: 100%; }
+    .booking .desc { color: #999; margin-top: 18px; }
+    #formResult { margin: 18px 0 0 0; font-size: 1.05em;}
+    .contacts {text-align: center; background: #232323; padding: 44px 12px; margin: 44px 0; border-radius: 24px;}
+    .contacts .map { margin-top: 16px;}
+    footer { text-align: center; padding: 18px; color: #ccc; background: #191919;}
+    @media (max-width: 900px) {
+      .cards { flex-direction: column; align-items: center; }
+      header { flex-direction: column; padding: 18px;}
+      .booking form { max-width: 100%; }
+    }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(30px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    /* Стили для модального окна оплаты */
+    #paymentModal { display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:#18181b99; align-items:center; justify-content:center; z-index:1000;}
+    #paymentModal .paybox {
+      background:#232323; padding:40px 30px; border-radius:16px; text-align:center; min-width:320px; max-width:96vw;
+      box-shadow: 0 4px 34px #0008;
+      animation: fadein .6s;
+    }
+    #paymentModal input {
+      border: none; outline:none;
+      background: #1a1a1c; color:#fff; font-size:1.07em; padding:11px 13px;
+      border-radius: 9px; margin-top:4px; margin-bottom:2px; width:100%;
+      box-sizing: border-box; transition: box-shadow 0.17s;
+    }
+    #paymentModal input:focus { box-shadow:0 0 0 2px #fbbd23; }
+    #paymentModal label { font-size:0.96em; }
+    #paymentModal .err { color:#f43e3e;font-size:0.93em;min-height:17px;display:block;}
+    #paymentModal button.btn { width:100%;margin-top:10px;}
+    #paymentModal button[disabled] { background:#888; color:#ccc;}
+    #paymentModal .payfields {display:flex;gap:7px;}
+    @media (max-width: 500px) {
+      #paymentModal .paybox {padding:18px 4vw; min-width:0;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Barber<span>Shop</span></div>
+    <nav>
+      <a href="#services">Услуги</a>
+      <a href="#booking">Запись</a>
+      <a href="#contacts">Контакты</a>
+    </nav>
+  </header>
+  <section class="hero">
+    <h1>Стиль начинается здесь</h1>
+    <p>Онлайн-запись и лучшие мастера в городе</p>
+    <a href="#booking" class="btn main-btn">Записаться</a>
+  </section>
+  <section id="services" class="services">
+    <h2>Наши услуги</h2>
+    <div class="cards">
+      <div class="card"><h3>Мужская стрижка</h3><p>1200₽ — 30 минут</p></div>
+      <div class="card"><h3>Бритьё</h3><p>800₽ — 25 минут</p></div>
+      <div class="card"><h3>Детская стрижка</h3><p>900₽ — 20 минут</p></div>
+    </div>
+  </section>
+  <section id="booking" class="booking">
+    <h2>Онлайн-запись</h2>
+    <form id="leadForm" autocomplete="off">
+      <input type="text" name="NAME" placeholder="Ваше имя" required>
+      <input type="tel" name="PHONE" id="phoneInput" placeholder="Телефон" required>
+      <span id="phoneError" style="color:#f43e3e;display:none;font-size:0.95em"></span>
+      <select name="SERVICE" id="serviceSelect" required>
+        <option value="">Выберите услугу</option>
+        <option value="Мужская стрижка" data-duration="30">Мужская стрижка</option>
+        <option value="Бритьё" data-duration="25">Бритьё</option>
+        <option value="Детская стрижка" data-duration="20">Детская стрижка</option>
+      </select>
+      <select name="DAY" id="daySelect" required></select>
+      <select name="TIME" id="timeSelect" required></select>
+      <button type="submit" class="btn">Записаться</button>
+    </form>
+    <div id="formResult"></div>
+    <!-- Окно оплаты картой -->
+    <div id="paymentModal">
+      <div class="paybox">
+        <h3>Оплата картой</h3>
+        <p>Для подтверждения записи оплатите услугу.<br>
+          <span id="paymentSum" style="font-size:1.5em; color:#fbbd23;"></span> ₽
+        </p>
+        <form id="cardForm" autocomplete="off" style="margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:9px;">
+          <div style="width:100%;text-align:left;">
+            <label>Номер карты</label><br>
+            <input id="cardNumber" maxlength="19" inputmode="numeric" placeholder="0000 0000 0000 0000">
+            <span id="cardNumberError" class="err"></span>
+          </div>
+          <div class="payfields" style="width:100%;">
+            <div style="flex:1;">
+              <label>Срок</label><br>
+              <input id="cardExpiry" maxlength="5" placeholder="MM/YY" inputmode="numeric">
+              <span id="cardExpiryError" class="err"></span>
+            </div>
+            <div style="flex:1;">
+              <label>CVV</label><br>
+              <input id="cardCvv" maxlength="3" inputmode="numeric" placeholder="123">
+              <span id="cardCvvError" class="err"></span>
+            </div>
+          </div>
+          <div style="width:100%;text-align:left;">
+            <label>Владелец карты</label><br>
+            <input id="cardName" maxlength="28" placeholder="IVAN IVANOV" style="text-transform:uppercase;">
+            <span id="cardNameError" class="err"></span>
+          </div>
+          <button type="submit" id="cardPayBtn" class="btn" disabled>Оплатить</button>
+          <div style="margin-top:8px;">
+            <button type="button" onclick="closePayModal()" class="btn" style="background:#aaa; color:#222;">Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <p class="desc">*Все данные отправляются в CRM Bitrix24, администратор свяжется с вами для подтверждения записи.</p>
+  </section>
+  <section id="contacts" class="contacts">
+    <h2>Контакты</h2>
+    <div>
+      <b>Адрес:</b> Москва, ул. Примерная, 12<br>
+      <b>Телефон:</b> +7 (999) 000-00-00
+    </div>
+    <div>
+      <b>Часы работы:</b> 10:00–21:00, ежедневно
+    </div>
+    <div class="map">
+      <iframe src="https://yandex.ru/map-widget/v1/-/CCU5eT7e4A" width="100%" height="200" frameborder="0"></iframe>
+    </div>
+  </section>
+  <footer>
+    &copy; 2025 BarberShop | CRM интеграция для диплома
+  </footer>
+  <script>
+  // --- JS часть ---
+  const servicePrices = {
+    "Мужская стрижка": 1200,
+    "Бритьё": 800,
+    "Детская стрижка": 900
+  };
+  // Генерация дней
+  const daySelect = document.getElementById('daySelect');
+  const today = new Date();
+  daySelect.innerHTML = "";
+  for(let i=0; i<4; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const val = d.toISOString().slice(0,10);
+    const isPastDay = d < new Date(new Date().toDateString());
+    if (!isPastDay) {
+      const label = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'2-digit'});
+      daySelect.innerHTML += `<option value="${val}">${label}</option>`;
+    }
+  }
+  async function generateTimeSlots() {
+    const timeSelect = document.getElementById('timeSelect');
+    const service = document.getElementById('serviceSelect').value;
+    const day = document.getElementById('daySelect').value;
+    timeSelect.innerHTML = '<option value="">Выберите время</option>';
+    if (!service || !day) return;
+    const dur = +document.querySelector(`#serviceSelect option[value="${service}"]`).dataset.duration;
+    const open = 10*60, close = 21*60;
+    const resp = await fetch(`/api/busy-slots?day=${day}`);
+    const busy = await resp.json();
+    const now = new Date();
+    const nowDayStr = now.toISOString().slice(0,10);
+    for(let min=open; min<=close-dur; min+=15) {
+      const h = Math.floor(min/60).toString().padStart(2,'0');
+      const m = (min%60).toString().padStart(2,'0');
+      const timeStr = `${h}:${m}`;
+      let isPastTime = false;
+      if (day === nowDayStr) {
+        const slotTime = new Date(day + "T" + timeStr + ":00");
+        if (slotTime <= now) isPastTime = true;
+      }
+      let conflict = false;
+      for(let slot of busy) {
+        if(slot.day === day) {
+          const slotStart = parseInt(slot.time.split(':')[0]) * 60 + parseInt(slot.time.split(':')[1]);
+          const slotDur = slot.duration ? parseInt(slot.duration) : dur;
+          const slotEnd = slotStart + slotDur;
+          const thisStart = min, thisEnd = min + dur;
+          if (!(thisEnd <= slotStart || thisStart >= slotEnd)) { conflict = true; break; }
+        }
+      }
+      if(!conflict && !isPastTime){
+        timeSelect.innerHTML += `<option value="${timeStr}">${timeStr}</option>`;
+      }
+    }
+  }
+  document.getElementById('serviceSelect').addEventListener('change', generateTimeSlots);
+  document.getElementById('daySelect').addEventListener('change', generateTimeSlots);
+
+  function isValidPhone(phone) {
+    let clear = phone.replace(/[^\d\+]/g, '');
+    if (/^(\+7|8)\d{10}$/.test(clear)) return true;
+    if (/^\+\d{10,15}$/.test(clear)) return true;
+    return false;
+  }
+
+  let formPayload = null;
+  function closePayModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+    formPayload = null;
+    document.getElementById('cardForm').reset();
+    for (let el of ['cardNumberError','cardExpiryError','cardCvvError','cardNameError'])
+      document.getElementById(el).innerText = '';
+    document.getElementById('cardPayBtn').disabled = true;
+  }
+
+  document.getElementById('leadForm').addEventListener('submit', async function(e) {
+    const phoneInput = document.getElementById('phoneInput');
+    const phoneError = document.getElementById('phoneError');
+    const phoneVal = phoneInput.value.trim();
+    if (!isValidPhone(phoneVal)) {
+      e.preventDefault();
+      phoneError.textContent = "Введите корректный номер телефона (например: +7XXXXXXXXXX)";
+      phoneError.style.display = '';
+      phoneInput.focus();
+      return;
+    } else { phoneError.style.display = 'none'; }
+    e.preventDefault();
+    const form = e.target;
+    const service = form.SERVICE.value;
+    const duration = document.querySelector(`#serviceSelect option[value="${service}"]`).dataset.duration;
+    const price = servicePrices[service] || 0;
+    formPayload = {
+      name: form.NAME.value,
+      phone: form.PHONE.value,
+      service,
+      day: form.DAY.value,
+      time: form.TIME.value,
+      duration,
+      price
+    };
+    document.getElementById('paymentSum').innerText = price;
+    document.getElementById('paymentModal').style.display = 'flex';
+  });
+
+  // ---- Card validation
+  const cardNumber = document.getElementById('cardNumber');
+  const cardExpiry = document.getElementById('cardExpiry');
+  const cardCvv = document.getElementById('cardCvv');
+  const cardName = document.getElementById('cardName');
+
+  function validateCardForm() {
+    let valid = true;
+    let numberVal = cardNumber.value.replace(/\D/g,'');
+    if (numberVal.length !== 16) {
+      document.getElementById('cardNumberError').innerText = 'Введите 16 цифр';
+      valid = false;
+    } else { document.getElementById('cardNumberError').innerText = ''; }
+    let expiryVal = cardExpiry.value.replace(/\s/g,'');
+    let expiryMatch = expiryVal.match(/^(\d{2})\/(\d{2})$/);
+    if (!expiryMatch) {
+      document.getElementById('cardExpiryError').innerText = 'MM/YY';
+      valid = false;
+    } else {
+      let mm = parseInt(expiryMatch[1]);
+      let yy = 2000 + parseInt(expiryMatch[2]);
+      let now = new Date();
+      let lastDate = new Date(yy, mm);
+      if (mm < 1 || mm > 12) {
+        document.getElementById('cardExpiryError').innerText = 'Месяц от 01 до 12';
+        valid = false;
+      } else if (lastDate < now) {
+        document.getElementById('cardExpiryError').innerText = 'Срок истёк';
+        valid = false;
+      } else { document.getElementById('cardExpiryError').innerText = ''; }
+    }
+    let cvvVal = cardCvv.value.replace(/\D/g,'');
+    if (cvvVal.length !== 3) {
+      document.getElementById('cardCvvError').innerText = '3 цифры';
+      valid = false;
+    } else { document.getElementById('cardCvvError').innerText = ''; }
+    let nameVal = cardName.value.toUpperCase().replace(/[^A-ZА-ЯЁ\s]/g,'');
+    if (nameVal.trim().length < 2) {
+      document.getElementById('cardNameError').innerText = 'Имя на карте';
+      valid = false;
+    } else { document.getElementById('cardNameError').innerText = ''; }
+    document.getElementById('cardPayBtn').disabled = !valid;
+    return valid;
+  }
+  function formatCardNumber() {
+    let val = cardNumber.value.replace(/\D/g, '').slice(0,16);
+    cardNumber.value = val.replace(/(.{4})/g,"$1 ").trim();
+    validateCardForm();
+  }
+  function formatCardExpiry() {
+    let val = cardExpiry.value.replace(/\D/g, '').slice(0,4);
+    if (val.length > 2) val = val.slice(0,2) + '/' + val.slice(2);
+    cardExpiry.value = val;
+    validateCardForm();
+  }
+  function formatCardCvv() {
+    cardCvv.value = cardCvv.value.replace(/\D/g, '').slice(0,3);
+    validateCardForm();
+  }
+  function formatCardName() {
+    cardName.value = cardName.value.toUpperCase().replace(/[^A-ZА-ЯЁ\s]/g,'');
+    validateCardForm();
+  }
+  cardNumber.addEventListener('input', formatCardNumber);
+  cardExpiry.addEventListener('input', formatCardExpiry);
+  cardCvv.addEventListener('input', formatCardCvv);
+  cardName.addEventListener('input', formatCardName);
+
+  document.getElementById('cardForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!validateCardForm()) return;
+    document.getElementById('cardPayBtn').disabled = true;
+    document.getElementById('cardPayBtn').innerText = "Оплата...";
+    setTimeout(async () => {
+      // Эмуляция оплаты
+      const resp = await fetch('/api/book', {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(formPayload)
+      });
+      const result = await resp.json();
+      document.getElementById('cardPayBtn').disabled = false;
+      document.getElementById('cardPayBtn').innerText = "Оплатить";
+      document.getElementById('paymentModal').style.display = 'none';
+      formPayload = null;
+      document.getElementById('cardForm').reset();
+      if (result.ok) {
+        document.getElementById('formResult').innerHTML = "<span style='color:limegreen'>Спасибо, вы записаны!</span>";
+        document.getElementById('leadForm').reset();
+      } else {
+        document.getElementById('formResult').innerHTML = "<span style='color:red'>Ошибка! Попробуйте позже.</span>";
+      }
+    }, 1200);
+  });
+  </script>
+</body>
+</html>

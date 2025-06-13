@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>BarberShop — Админка</title>
+  <link rel="stylesheet" href="admin.css">
+  <style>
+    .cell.dragover {
+      outline: 2.5px solid #fbbd23;
+      background: #2b2b1a !important;
+      animation: pulse 0.4s;
+    }
+    .cell.busy {
+      background: #444 !important;
+      cursor: not-allowed !important;
+      opacity: 0.68;
+      border-radius: 6px;
+    }
+    .cell.past {
+      background: #1a1a1c !important;
+      cursor: not-allowed !important;
+      opacity: 0.6;
+    }
+    .cell.free {
+      background: #23231b !important;
+      cursor: pointer;
+      transition: background 0.17s;
+    }
+    .cell.free:hover {
+      background: #2d2d1a !important;
+    }
+    .dragged {
+      opacity: 0.35 !important;
+      border: 2px dashed #ffd353 !important;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 #ffb70060;}
+      80% { box-shadow: 0 0 0 8px #a5770332;}
+      100% { box-shadow: 0 0 0 0 transparent;}
+    }
+  .cell.occupied {
+  background: #393940 !important;
+  opacity: 0.55;
+  pointer-events: none;
+  border-radius: 10px;
+}
+  .cell.busy {
+    background: #26282f !important;
+    color: #e3e3e3 !important;
+    cursor: grab !important;
+    opacity: 1 !important;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px #0006;
+    transition: background 0.2s, color 0.2s;
+  }
+  .cell.busy .statusText,
+  .cell.busy .priceCell {
+    color: #2da8f6 !important;
+  }
+  .cell.busy b {
+    color: #fbbd23 !important;
+  }
+  .cell.busy .service {
+    color: #bdbdbd !important;
+  }
+
+
+  </style>
+</head>
+<body>
+  <div id="dashboard" style="display:none; max-width:600px; margin:30px auto 18px auto; background:#202020; border-radius:12px; box-shadow:0 2px 18px #0008; padding:22px 28px;">
+  <b>Итоги за сегодня:</b><br>
+  <span>Всего: <span id="todayTotal" style="color:#fbbd23"></span> ₽</span><br>
+  <span>Наличными: <span id="todayCash"></span> ₽</span><br>
+  <span>Картой: <span id="todayCard"></span> ₽</span><br>
+  <span>Скидки: <span id="todayDiscount"></span> ₽</span>
+</div>
+<button onclick="showAllComments()" class="btn" style="margin:18px 0 18px 0;">Показать все комментарии</button>
+<div id="commentsModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:#18181bcb; align-items:center; justify-content:center; z-index:1000;">
+  <div style="background:#232323; padding:34px 24px; border-radius:16px; min-width:340px; max-width:90vw; max-height:90vh; overflow:auto;">
+    <h3>Комментарии клиентов</h3>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr style="color:#fbbd23;">
+          <th style="text-align:left; padding:6px 9px;">Имя</th>
+          <th style="text-align:left; padding:6px 9px;">Телефон</th>
+          <th style="text-align:left; padding:6px 9px;">Комментарий</th>
+          <th style="text-align:left; padding:6px 9px;">Время</th>
+        </tr>
+      </thead>
+      <tbody id="commentsTableBody"></tbody>
+    </table>
+    <button onclick="closeCommentsModal()" class="btn" style="margin:18px 0 0 0; background:#aaa; color:#222;">Закрыть</button>
+  </div>
+</div>
+  <h2>Админ-панель (BarberShop)</h2>
+  <div id="loginForm">
+    <input type="password" id="adminPass" placeholder="Пароль">
+    <button onclick="login()">Войти</button>
+    <div id="loginError" style="color:#f43e3e; margin-top: 8px;"></div>
+  </div>
+  <div id="calendarSection" style="display:none">
+    <h3>Календарь записей</h3>
+    <div style="margin-bottom:18px;">
+      <select id="adminDayStart"></select>
+      <span style="color:#fbbd23; font-weight:600;">Показать дней:</span>
+      <select id="adminNumDays">
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+      <button onclick="loadCalendar()">Показать</button>
+    </div>
+    <div class="calendarWrap">
+      <table class="calendarTable" id="calendarTable"></table>
+    </div>
+  </div>
+  <div class="modal" id="modalCard">
+    <div class="modal-content">
+      <div id="clientInfo"></div>
+      <div id="priceBlock">
+        <input type="number" id="leadPrice" min="0" placeholder="Цена, ₽" style="margin:12px 0; width: 120px;">
+        <button class="price-btn" onclick="savePrice()">Сохранить цену</button>
+      </div>
+      <div class="statusBtns">
+        <button onclick="updateStatus('NEW')"><span class="statusDot dot-wait"></span> Ожидание</button>
+        <button onclick="updateStatus('IN_PROCESS')"><span class="statusDot dot-work"></span> В работе</button>
+        <button onclick="updateStatus('CONVERTED')"><span class="statusDot dot-ok"></span> Пришёл</button>
+        <button onclick="updateStatus('JUNK')"><span class="statusDot dot-bad"></span> Не пришёл</button>
+      </div>
+      <button class="danger" onclick="deleteLead()">Удалить запись</button>
+      <button class="close" onclick="closeModal()">Закрыть</button>
+    </div>
+  </div>
+<script>
+let currentLeadId = null;
+let recordsCache = [];
+let daysList = [];
+let draggedLeadId = null;
+
+function login() {
+  const pass = document.getElementById('adminPass').value;
+  fetch('/admin/login', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({password:pass})
+  }).then(r=>r.json()).then(res=>{
+    if(res.ok){
+      document.getElementById('loginForm').style.display='none';
+      document.getElementById('calendarSection').style.display='';
+      loadDaySelect();
+      loadCalendar();
+      loadCalendar();
+      loadDashboard();
+    } else {
+      document.getElementById('loginError').innerText="Ошибка входа";
+    }
+  });
+}
+async function loadDashboard() {
+  const dashboard = document.getElementById('dashboard');
+  dashboard.style.display = 'none';
+  try {
+    const res = await fetch('/admin/today-totals');
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('todayTotal').innerText = data.total;
+    document.getElementById('todayCash').innerText = data.cash;
+    document.getElementById('todayCard').innerText = data.card;
+    document.getElementById('todayDiscount').innerText = data.discount;
+    dashboard.style.display = '';
+  } catch(e) {}
+}
+function loadDaySelect() {
+  const sel = document.getElementById('adminDayStart');
+  sel.innerHTML = '';
+  const now = new Date();
+  for(let i=-2;i<=2;i++){
+    const d = new Date(now);
+    d.setDate(now.getDate()+i);
+    const val = d.toISOString().slice(0,10);
+    const label = d.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'2-digit'});
+    sel.innerHTML += `<option value="${val}">${label}</option>`;
+  }
+  document.getElementById('adminNumDays').value = 3;
+}
+
+function makeDaysArr(start, num) {
+  let arr = [];
+  let d = new Date(start);
+  for(let i=0; i<num; i++) {
+    arr.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate()+1);
+  }
+  return arr;
+}
+
+function statusLabel(code){
+  switch(code){
+    case 'NEW': return '<span class="statusDot dot-wait"></span> Ожидание';
+    case 'IN_PROCESS': return '<span class="statusDot dot-work"></span> В работе';
+    case 'JUNK': return '<span class="statusDot dot-bad"></span> Не пришёл';
+    case 'CONVERTED': return '<span class="statusDot dot-ok"></span> Пришёл';
+    default: return code;
+  }
+}
+
+function isPastSlot(day, time) {
+  const now = new Date();
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date(day);
+  d.setHours(h, m, 0, 0);
+  return d < now;
+}
+
+function loadCalendar() {
+  const startDay = document.getElementById('adminDayStart').value;
+  const numDays = parseInt(document.getElementById('adminNumDays').value);
+  daysList = makeDaysArr(startDay, numDays);
+  let times = [];
+  for(let min=10*60; min<=20*60+45; min+=15){
+    let h = Math.floor(min/60).toString().padStart(2,'0');
+    let m = (min%60).toString().padStart(2,'0');
+    times.push(`${h}:${m}`);
+  }
+  fetch('/admin/records').then(r=>r.json()).then(records=>{
+    recordsCache = records;
+    let html = `<tr><th>Время</th>`;
+    for(let d of daysList) {
+      let dObj = new Date(d);
+      html += `<th>${dObj.toLocaleDateString('ru-RU', {weekday:'short', day:'2-digit', month:'2-digit'})}</th>`;
+    }
+    html += '</tr>';
+    for(let time of times){
+      html += `<tr><td class="timeCol">${time}</td>`;
+      for(let day of daysList){
+        let thisMin = parseInt(time.split(':')[0]) * 60 + parseInt(time.split(':')[1]);
+        let occupiedByPrev = false;
+        let mainRec = null;
+        // Проверяем каждую запись, вдруг её длительность покрывает этот слот
+        for(let r of records){
+          if(r.day === day) {
+            let recMin = parseInt(r.time.split(':')[0]) * 60 + parseInt(r.time.split(':')[1]);
+            let dur = parseInt(r.duration) || 15;
+            if (recMin < thisMin && (recMin + dur) > thisMin) {
+              occupiedByPrev = true;
+              break;
+            }
+            if (recMin === thisMin) mainRec = r;
+          }
+        }
+        const past = isPastSlot(day, time);
+        if(mainRec) {
+          html += `<td class="cell busy status-${mainRec.status}"
+            draggable="${past ? 'false' : 'true'}"
+            ondragstart="dragStart(event, '${mainRec.id}')"
+            ondragend="dragEnd(event)"
+            onclick="openModalById('${mainRec.id}')"
+            style="user-select:none;">
+              <b>${mainRec.name}</b><br>
+              <span class="service">${mainRec.service}</span><br>
+              <span class="statusText">${statusLabel(mainRec.status)}</span><br>
+              <span class="priceCell">${mainRec.price ? "Цена: " + mainRec.price + "₽" : ""}</span>
+            </td>`;
+        } else if(occupiedByPrev) {
+          html += `<td class="cell occupied"></td>`;
+        } else if (past) {
+          html += `<td class="cell past"></td>`;
+        } else {
+          html += `<td class="cell free"
+            ondragover="allowDrop(event)"
+            ondragenter="cellDragEnter(event)"
+            ondragleave="cellDragLeave(event)"
+            ondrop="dropRecord(event, '${time}', '${day}')"
+            style="user-select:none;"></td>`;
+        }
+      }
+      html += `</tr>`;
+    }
+    document.getElementById('calendarTable').innerHTML = html;
+  });
+}
+
+function dragStart(event, leadId) {
+  draggedLeadId = leadId;
+  event.dataTransfer.effectAllowed = "move";
+  setTimeout(()=>event.target.classList.add('dragged'), 0);
+}
+
+function dragEnd(event) {
+  document.querySelectorAll('.cell').forEach(c => c.classList.remove('dragged', 'dragover'));
+  draggedLeadId = null;
+}
+
+function allowDrop(event) {
+  if (event.target.classList.contains('busy') || event.target.classList.contains('past')) return;
+  event.preventDefault();
+}
+
+function cellDragEnter(event) {
+  if (event.target.classList.contains('busy') || event.target.classList.contains('past')) return;
+  event.preventDefault();
+  event.target.classList.add('dragover');
+}
+function cellDragLeave(event) {
+  event.target.classList.remove('dragover');
+}
+
+function dropRecord(event, time, day) {
+  event.preventDefault();
+  document.querySelectorAll('.cell').forEach(c => c.classList.remove('dragover', 'dragged'));
+  if (!draggedLeadId) return;
+  if (event.target.classList.contains('busy') || event.target.classList.contains('past')) return;
+  const rec = recordsCache.find(r => r.id==draggedLeadId);
+  if (rec && rec.day === day && rec.time === time) return; // нельзя на себя же
+  if (!confirm('Переместить запись на это время?')) {
+    draggedLeadId = null;
+    return;
+  }
+  fetch('/admin/move-record', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ id: draggedLeadId, newDay: day, newTime: time })
+  }).then(r=>r.json()).then(res=>{
+    if(res.ok) {
+      loadCalendar();
+      draggedLeadId = null;
+    } else {
+      alert('Ошибка перемещения!');
+    }
+  });
+}
+async function showAllComments() {
+  try {
+    const res = await fetch('/admin/all-comments');
+    const data = await res.json();
+    let rows = "";
+    if (!data || !data.length) {
+      rows = `<tr><td colspan="4" style="color:#f43e3e;">Комментариев не найдено</td></tr>`;
+    } else {
+      for (const c of data) {
+        rows += `<tr>
+          <td style="padding:5px 8px; color:#fbbd23;"><b>${c.name}</b></td>
+          <td style="padding:5px 8px; color:#88b6f9;">${c.phone || ''}</td>
+          <td style="padding:5px 8px;">${c.comment || ''}</td>
+          <td style="padding:5px 8px; font-size:0.95em; color:#888;">${c.created ? new Date(c.created).toLocaleString('ru-RU') : ''}</td>
+        </tr>`;
+      }
+    }
+    document.getElementById('commentsTableBody').innerHTML = rows;
+    document.getElementById('commentsModal').style.display = 'flex';
+  } catch (e) {
+    alert('Ошибка загрузки комментариев!');
+  }
+}
+function closeCommentsModal() {
+  document.getElementById('commentsModal').style.display = 'none';
+}
+function openModalById(id){
+  let rec = recordsCache.find(r=>r.id==id);
+  if(!rec) return;
+  currentLeadId = rec.id;
+  document.getElementById('clientInfo').innerHTML =
+    `<b>${rec.name}</b><br>Услуга: ${rec.service}<br>Время: ${rec.day} ${rec.time}<br>Текущий статус: ${statusLabel(rec.status)}`;
+  document.getElementById('leadPrice').value = rec.price ? rec.price : '';
+  document.getElementById('modalCard').style.display='flex';
+}
+function closeModal(){document.getElementById('modalCard').style.display='none';}
+
+function updateStatus(status){
+  fetch('/admin/update-status', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:currentLeadId, status})
+  }).then(()=>{closeModal(); loadCalendar(); loadDashboard();});
+}
+
+function deleteLead() {
+  if (!currentLeadId) return;
+  if (!confirm('Удалить запись безвозвратно?')) return;
+  fetch('/admin/delete', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:currentLeadId})
+  }).then(()=>{closeModal(); loadCalendar(); loadDashboard();})
+  
+}
+
+function savePrice() {
+  let price = document.getElementById('leadPrice').value;
+  if (!currentLeadId) return;
+  fetch('/admin/update-price', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id: currentLeadId, price})
+  }).then(()=>{closeModal(); loadCalendar(); loadDashboard();});
+}
+</script>
+
+</body>
+</html>

@@ -1,10 +1,9 @@
 const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-const path = require('path`');
+const axios   = require('axios');
+const cors    = require('cors');
+const path    = require('path');        // ← вот это!
 const session = require('express-session');
-const app = express();
-const QRCode = require('qrcode');
+const QRCode  = require('qrcode');
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 const B24_WEBHOOK = "https://b24-c15sq2.bitrix24.ru/rest/1/2xyexpag7xovn0gr/";
 

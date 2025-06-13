@@ -6,7 +6,8 @@ const session = require('express-session');
 const QRCode  = require('qrcode');
 const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 const B24_WEBHOOK = "https://b24-c15sq2.bitrix24.ru/rest/1/2xyexpag7xovn0gr/";
-
+const app  = express();
+const PORT = process.env.PORT || 3001;
 // Middlewares
 app.use(cors());
 app.use(express.json());
@@ -51,25 +52,23 @@ app.get('/api/busy-slots', async (req, res) => {
 });
 app.get('/qr/client', async (req, res) => {
   try {
-    const target = 'https://diplom-production-78a7.up.railway.app/';
-    const svg = await QRCode.toString(target, { type: 'svg', margin: 1 });
+    const publicURL = process.env.PUBLIC_URL || `https://diplom-production-78a7.up.railway.app`;
+    const svg = await QRCode.toString(publicURL, { type: 'svg', margin: 1 });
     res.type('image/svg+xml').send(svg);
-  } catch (err) {
-    console.error('QR/client error:', err);
-    res.status(500).send('Ошибка генерации QR для клиентской части');
+  } catch (e) {
+    res.status(500).send('QR error');
   }
 });
 
-// QR-код для админки
 app.get('/qr/admin', async (req, res) => {
   try {
-    // Если у вас админка открывается не с корня, а, например, с /admin.html — поправьте URL ниже
-    const target = 'https://diplom-production-78a7.up.railway.app/admin.html';
-    const svg = await QRCode.toString(target, { type: 'svg', margin: 1 });
+    const publicURL = process.env.PUBLIC_URL
+      ? `${process.env.PUBLIC_URL}/admin`
+      : `https://diplom-production-78a7.up.railway.app/admin`;
+    const svg = await QRCode.toString(publicURL, { type: 'svg', margin: 1 });
     res.type('image/svg+xml').send(svg);
-  } catch (err) {
-    console.error('QR/admin error:', err);
-    res.status(500).send('Ошибка генерации QR для админки');
+  } catch (e) {
+    res.status(500).send('QR error');
   }
 });
 // Новая заявка (создать лид в Bitrix24)
@@ -345,5 +344,5 @@ app.get('/qr', async (req, res) => {
     res.status(500).send('QR generation error');
   }
 });
-const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, () => console.log("Server started on port", PORT));
